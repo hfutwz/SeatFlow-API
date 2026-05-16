@@ -38,10 +38,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                 String username = jwtTokenProvider.getUsernameFromToken(jwt);
 
-                // 使用 userId + username 组合查询，确保与 token 对应
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                // 再次验证 userId 一致，防止伪造
                 if (userDetails instanceof CustomUserDetails cd
                         && cd.getId().equals(userId)) {
                     UsernamePasswordAuthenticationToken authentication =
@@ -58,6 +56,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.error("JWT authentication failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

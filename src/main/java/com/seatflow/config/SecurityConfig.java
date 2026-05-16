@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -28,11 +29,13 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -42,6 +45,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").anonymous()
                         // 静态资源
                         .requestMatchers("/error", "/favicon.ico").permitAll()
+                        // 管理端接口需持有对应权限
+                        .requestMatchers("/api/admin/**").hasAnyAuthority(
+                                "room:manage", "seat:manage", "reservation:manage",
+                                "system:config", "role:manage", "user:manage",
+                                "reservation:view", "violation:view"
+                        )
                         // 其他所有接口需要认证
                         .anyRequest().authenticated()
                 )

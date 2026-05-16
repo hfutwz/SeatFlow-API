@@ -12,6 +12,7 @@ public interface PermissionMapper extends BaseMapper<Permission> {
     @Select("SELECT DISTINCT p.* FROM t_permission p " +
             "INNER JOIN t_role_permission rp ON p.id = rp.permission_id " +
             "INNER JOIN t_user_role ur ON rp.role_id = ur.role_id " +
-            "WHERE ur.user_id = #{userId}")
+            "INNER JOIN t_role r ON rp.role_id = r.id " +
+            "WHERE ur.user_id = #{userId} AND r.deleted = 0")
     List<Permission> selectByUserId(Long userId);
 }
