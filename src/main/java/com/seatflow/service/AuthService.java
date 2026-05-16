@@ -12,7 +12,12 @@ public interface AuthService {
     LoginResponse login(LoginRequest request);
 
     /**
-     * 获取当前登录用户信息
+     * 获取当前登录用户信息（从 SecurityContext 获取）
      */
     UserInfoResponse getCurrentUserInfo();
+
+    /**
+     * 根据用户 ID 获取用户信息（测试/Service 层调用）
+     */
+    UserInfoResponse getCurrentUser(Long userId);
 }

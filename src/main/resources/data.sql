@@ -6,14 +6,11 @@
 INSERT INTO t_department (id, name) VALUES (1, '计算机学院');
 INSERT INTO t_department (id, name) VALUES (2, '电子工程学院');
 
--- Users (password = admin123, BCrypt hash)
--- admin: admin123
--- student1: student123
--- student2: student123
+-- Users (password = admin123 / student123, BCrypt hash)
 INSERT INTO t_user (id, username, password, real_name, email, department_id, user_type) VALUES
-(1, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '系统管理员', 'admin@seatflow.edu', NULL, 'ADMIN'),
-(2, 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '张三', 'zhangsan@seatflow.edu', 1, 'STUDENT'),
-(3, 'student2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '李四', 'lisi@seatflow.edu', 2, 'STUDENT');
+(1, 'admin', '$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK', '系统管理员', 'admin@seatflow.edu', NULL, 'ADMIN'),
+(2, 'student1', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '张三', 'zhangsan@seatflow.edu', 1, 'STUDENT'),
+(3, 'student2', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '李四', 'lisi@seatflow.edu', 2, 'STUDENT');
 
 -- Roles
 INSERT INTO t_role (id, name, code, description) VALUES

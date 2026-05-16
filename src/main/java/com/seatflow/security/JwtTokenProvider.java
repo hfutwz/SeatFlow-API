@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 生成 JWT Token
+     * 生成 JWT Token（完整参数版，供生产使用）
      */
     public String generateToken(Long userId, String username, List<String> roles) {
         Date now = new Date();
@@ -36,6 +37,23 @@ public class JwtTokenProvider {
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("roles", roles)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+
+    /**
+     * 生成 JWT Token（单参数版，供测试使用）
+     */
+    public String generateToken(String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMs);
+
+        return Jwts.builder()
+                .subject("0")
+                .claim("username", username)
+                .claim("roles", Collections.emptyList())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
@@ -56,6 +74,13 @@ public class JwtTokenProvider {
     public String getUsernameFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("username", String.class);
+    }
+
+    /**
+     * 从 Token 中解析用户名（测试兼容别名）
+     */
+    public String getUsername(String token) {
+        return getUsernameFromToken(token);
     }
 
     /**
@@ -84,6 +109,13 @@ public class JwtTokenProvider {
      * 获取 Token 过期时间（毫秒）
      */
     public long getExpirationMs() {
+        return expirationMs;
+    }
+
+    /**
+     * 获取 Token 过期时间（测试兼容别名）
+     */
+    public long getExpiration() {
         return expirationMs;
     }
 

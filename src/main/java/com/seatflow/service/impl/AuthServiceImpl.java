@@ -60,7 +60,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserInfoResponse getCurrentUserInfo() {
         Long userId = SecurityUtils.getCurrentUserId();
+        return getCurrentUser(userId);
+    }
 
+    @Override
+    public UserInfoResponse getCurrentUser(Long userId) {
         User user = userMapper.selectById(userId);
 
         List<Role> roles = roleMapper.selectByUserId(userId);
