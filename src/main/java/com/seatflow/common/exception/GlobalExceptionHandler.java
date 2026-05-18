@@ -4,7 +4,6 @@ import com.seatflow.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -19,12 +18,6 @@ public class GlobalExceptionHandler {
     public Result<Void> handleBusinessException(BusinessException e) {
         log.warn("Business exception: {}", e.getMessage());
         return Result.fail(e.getCode(), e.getMessage());
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result<Void> handleBadCredentials(BadCredentialsException e) {
-        return Result.fail(401, "用户名或密码错误");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
