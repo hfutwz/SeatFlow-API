@@ -17,6 +17,7 @@ import com.seatflow.entity.User;
 import com.seatflow.mapper.PermissionMapper;
 import com.seatflow.mapper.RoleMapper;
 import com.seatflow.mapper.UserMapper;
+import com.seatflow.security.CustomUserDetails;
 import com.seatflow.security.JwtTokenProvider;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -48,6 +51,7 @@ class RbacApiTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtTokenProvider jwtTokenProvider;
 
+    @MockBean private UserDetailsService userDetailsService;
     @MockBean private UserMapper userMapper;
     @MockBean private RoleMapper roleMapper;
     @MockBean private PermissionMapper permissionMapper;
@@ -79,12 +83,11 @@ class RbacApiTest {
     @Test
     @DisplayName("GET /api/admin/roles as super_admin → 200")
     void shouldAllowSuperAdminToAccessRoleList() throws Exception {
-        when(userMapper.selectByUsername("admin")).thenReturn(adminUser);
-        when(roleMapper.selectRolesByUserId(1L)).thenReturn(List.of(superAdminRole()));
-        when(permissionMapper.selectPermissionsByRoleIds(any()))
-                .thenReturn(List.of(allPermissions()));
+        List<String> adminPerms = List.of("room:manage", "seat:manage", "reservation:manage", "system:config", "role:manage", "user:manage", "reservation:view", "violation:view");
+        when(userDetailsService.loadUserByUsername("admin"))
+                .thenReturn(buildUserDetails(adminUser, adminPerms));
 
-        String token = jwtTokenProvider.generateToken("admin");
+        String token = jwtTokenProvider.generateToken(1L, "admin", List.of("super_admin"));
 
         mockMvc.perform(get("/api/admin/roles")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
@@ -94,12 +97,11 @@ class RbacApiTest {
     @Test
     @DisplayName("GET /api/admin/users as super_admin → 200")
     void shouldAllowSuperAdminToAccessUserList() throws Exception {
-        when(userMapper.selectByUsername("admin")).thenReturn(adminUser);
-        when(roleMapper.selectRolesByUserId(1L)).thenReturn(List.of(superAdminRole()));
-        when(permissionMapper.selectPermissionsByRoleIds(any()))
-                .thenReturn(List.of(allPermissions()));
+        List<String> adminPerms = List.of("room:manage", "seat:manage", "reservation:manage", "system:config", "role:manage", "user:manage", "reservation:view", "violation:view");
+        when(userDetailsService.loadUserByUsername("admin"))
+                .thenReturn(buildUserDetails(adminUser, adminPerms));
 
-        String token = jwtTokenProvider.generateToken("admin");
+        String token = jwtTokenProvider.generateToken(1L, "admin", List.of("super_admin"));
 
         mockMvc.perform(get("/api/admin/users")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
@@ -110,12 +112,10 @@ class RbacApiTest {
     @Test
     @DisplayName("GET /api/admin/roles as student → 403")
     void shouldDenyStudentAccessToRoleList() throws Exception {
-        when(userMapper.selectByUsername("student01")).thenReturn(studentUser);
-        when(roleMapper.selectRolesByUserId(2L)).thenReturn(List.of(studentRole()));
-        when(permissionMapper.selectPermissionsByRoleIds(any()))
-                .thenReturn(List.of(studentPermissions()));
+        when(userDetailsService.loadUserByUsername("student01"))
+                .thenReturn(buildUserDetails(studentUser, List.of("reservation:view", "reservation:create")));
 
-        String token = jwtTokenProvider.generateToken("student01");
+        String token = jwtTokenProvider.generateToken(2L, "student01", List.of("student"));
 
         mockMvc.perform(get("/api/admin/roles")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
@@ -126,12 +126,10 @@ class RbacApiTest {
     @Test
     @DisplayName("POST /api/admin/rooms as student → 403")
     void shouldDenyStudentAccessToCreateRoom() throws Exception {
-        when(userMapper.selectByUsername("student01")).thenReturn(studentUser);
-        when(roleMapper.selectRolesByUserId(2L)).thenReturn(List.of(studentRole()));
-        when(permissionMapper.selectPermissionsByRoleIds(any()))
-                .thenReturn(List.of(studentPermissions()));
+        when(userDetailsService.loadUserByUsername("student01"))
+                .thenReturn(buildUserDetails(studentUser, List.of("reservation:view", "reservation:create")));
 
-        String token = jwtTokenProvider.generateToken("student01");
+        String token = jwtTokenProvider.generateToken(2L, "student01", List.of("student"));
 
         mockMvc.perform(post("/api/admin/rooms")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -150,12 +148,10 @@ class RbacApiTest {
         viewerUser.setUsername("viewer01");
         viewerUser.setUserType("ADMIN");
 
-        when(userMapper.selectByUsername("viewer01")).thenReturn(viewerUser);
-        when(roleMapper.selectRolesByUserId(4L)).thenReturn(List.of(viewerRole()));
-        when(permissionMapper.selectPermissionsByRoleIds(any()))
-                .thenReturn(List.of(viewerPermissions()));
+        when(userDetailsService.loadUserByUsername("viewer01"))
+                .thenReturn(buildUserDetails(viewerUser, List.of("reservation:view", "violation:view")));
 
-        String token = jwtTokenProvider.generateToken("viewer01");
+        String token = jwtTokenProvider.generateToken(4L, "viewer01", List.of("viewer"));
 
         mockMvc.perform(put("/api/admin/configs")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -183,6 +179,21 @@ class RbacApiTest {
     }
 
     // ==================== Helper methods ====================
+    private CustomUserDetails buildUserDetails(User user, List<String> permissions) {
+        List<SimpleGrantedAuthority> authorities = permissions.stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+        return new CustomUserDetails(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getUserType(),
+                user.getDepartmentId(),
+                List.of(),
+                authorities
+        );
+    }
+
     private Role superAdminRole() {
         Role r = new Role(); r.setId(1L); r.setCode("super_admin"); r.setName("超级管理员"); return r;
     }

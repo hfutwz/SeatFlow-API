@@ -7,6 +7,7 @@ import com.seatflow.mapper.RoleMapper;
 import com.seatflow.mapper.UserMapper;
 import com.seatflow.security.JwtTokenProvider;
 import com.seatflow.service.AuthService;
+import com.seatflow.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class AuthServiceTest {
     @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private AuthService authService;
+    private AuthServiceImpl authService;
 
     private User testUser;
 
