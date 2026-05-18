@@ -40,10 +40,10 @@ public class AuthServiceImpl implements AuthService {
         );
 
         if (user == null) {
-            throw new BusinessException("用户名不存在");
+            throw new BusinessException(401, "用户名不存在");
         }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BusinessException("密码错误");
+            throw new BusinessException(401, "密码错误");
         }
 
         List<Role> roles = roleMapper.selectByUserId(user.getId());
