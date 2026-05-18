@@ -2,6 +2,7 @@ package com.seatflow.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.seatflow.entity.Permission;
@@ -96,7 +97,7 @@ class RbacServiceTest {
     void shouldNotContainManagementPermissionsForStudent() {
         // Given: 学生仅有基础预约权限
         when(roleMapper.selectRolesByUserId(2L)).thenReturn(List.of(studentRole));
-        when(permissionMapper.selectPermissionsByRoleIds(anyList()))
+        lenient().when(permissionMapper.selectPermissionsByRoleIds(anyList()))
                 .thenReturn(List.of(reservationView));
 
         // When
@@ -114,7 +115,7 @@ class RbacServiceTest {
     void shouldContainAllPermissionsForSuperAdmin() {
         // Given
         when(roleMapper.selectRolesByUserId(1L)).thenReturn(List.of(superAdminRole));
-        when(permissionMapper.selectPermissionsByRoleIds(anyList()))
+        lenient().when(permissionMapper.selectPermissionsByRoleIds(anyList()))
                 .thenReturn(Arrays.asList(
                         reservationView, violationView, reservationManage,
                         seatManage, roomManage, systemConfig, roleManage, userManage));
@@ -140,7 +141,7 @@ class RbacServiceTest {
         // room_admin: room:manage, seat:manage, reservation:view
         // service_admin: reservation:view, violation:view, reservation:manage
         // 并集应包含 5 个权限（reservation:view 不重复）
-        when(permissionMapper.selectPermissionsByRoleIds(anyList()))
+        lenient().when(permissionMapper.selectPermissionsByRoleIds(anyList()))
                 .thenReturn(Arrays.asList(
                         roomManage, seatManage, reservationView,
                         violationView, reservationManage));
@@ -160,7 +161,7 @@ class RbacServiceTest {
     @DisplayName("should return empty permissions when user has no roles")
     void shouldReturnEmptyPermissionsWhenUserHasNoRoles() {
         when(roleMapper.selectRolesByUserId(99L)).thenReturn(Collections.emptyList());
-        when(permissionMapper.selectPermissionsByRoleIds(anyList()))
+        lenient().when(permissionMapper.selectPermissionsByRoleIds(anyList()))
                 .thenReturn(Collections.emptyList());
 
         List<String> permissions = roleService.getUserPermissions(99L);
@@ -173,7 +174,7 @@ class RbacServiceTest {
     @DisplayName("should only contain view permissions for viewer role")
     void shouldOnlyContainViewPermissionsForViewer() {
         when(roleMapper.selectRolesByUserId(4L)).thenReturn(List.of(viewerRole));
-        when(permissionMapper.selectPermissionsByRoleIds(anyList()))
+        lenient().when(permissionMapper.selectPermissionsByRoleIds(anyList()))
                 .thenReturn(List.of(reservationView, violationView));
 
         List<String> permissions = roleService.getUserPermissions(4L);
