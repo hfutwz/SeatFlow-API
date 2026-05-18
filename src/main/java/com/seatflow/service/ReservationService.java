@@ -207,6 +207,9 @@ public class ReservationService {
         Page<Reservation> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reservation::getUserId, userId)
+                .and(w -> w.in(Reservation::getStatus, List.of("COMPLETED", "CANCELLED"))
+                        .or(sub -> sub.eq(Reservation::getStatus, "CHECKED_IN")
+                                .lt(Reservation::getDate, java.time.LocalDate.now())))
                 .orderByDesc(Reservation::getDate)
                 .orderByDesc(Reservation::getStartTime);
 

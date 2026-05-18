@@ -7,6 +7,7 @@ import com.seatflow.dto.request.SeatCreateRequest;
 import com.seatflow.dto.request.SeatUpdateRequest;
 import com.seatflow.dto.response.SeatResponse;
 import com.seatflow.entity.Room;
+import com.seatflow.entity.Room;
 import com.seatflow.entity.Seat;
 import com.seatflow.mapper.RoomMapper;
 import com.seatflow.mapper.SeatMapper;
@@ -118,9 +119,15 @@ public class SeatService {
     }
 
     private SeatResponse toSeatResponse(Seat seat) {
+        String roomName = "";
+        if (seat.getRoomId() != null) {
+            Room room = roomMapper.selectById(seat.getRoomId());
+            if (room != null) roomName = room.getName();
+        }
         return SeatResponse.builder()
                 .id(seat.getId())
                 .roomId(seat.getRoomId())
+                .roomName(roomName)
                 .seatNumber(seat.getSeatNumber())
                 .rowNum(seat.getRowNum())
                 .colNum(seat.getColNum())

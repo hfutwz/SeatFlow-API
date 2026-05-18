@@ -75,7 +75,7 @@ public class AssistantService {
         if (containsAny(lower, "有哪些自习室", "自习室列表", "查看自习室", "什么自习室")) {
             return "QUERY_ROOMS";
         }
-        if (containsAny(lower, "有空座", "空座位", "可用座位", "找座位", "搜索座位", "查座位")) {
+        if (containsAny(lower, "有空座", "空座位", "可用座位", "找座位", "搜索座位", "查座位", "空座", "座位")) {
             return "QUERY_AVAILABLE_SEATS";
         }
 
@@ -185,6 +185,18 @@ public class AssistantService {
     }
 
     private String handleQueryAvailableSeats(String message) {
+        String lower = message.toLowerCase();
+
+        // 解析位置偏好
+        String positionFilter = null;
+        if (containsAny(lower, "靠窗", "窗户", "窗边")) positionFilter = "WINDOW";
+        else if (containsAny(lower, "靠走廊", "走廊", "过道")) positionFilter = "CORRIDOR";
+
+        // 解析插座偏好
+        String socketFilter = null;
+        if (containsAny(lower, "插座", "插电", "充电", "固定插")) socketFilter = "FIXED";
+        else if (containsAny(lower, "移动导轨", "导轨")) socketFilter = "TRACK";
+
         List<Room> rooms = roomMapper.selectList(
                 new LambdaQueryWrapper<Room>().eq(Room::getStatus, "OPEN").orderByAsc(Room::getId));
 
@@ -193,8 +205,13 @@ public class AssistantService {
         StringBuilder sb = new StringBuilder("🔍 今日可用座位：\n\n");
         boolean hasAvailable = false;
         for (Room room : rooms) {
-            List<Seat> seats = seatMapper.selectList(
-                    new LambdaQueryWrapper<Seat>().eq(Seat::getRoomId, room.getId()).eq(Seat::getStatus, "AVAILABLE"));
+            LambdaQueryWrapper<Seat> seatQuery = new LambdaQueryWrapper<Seat>()
+                    .eq(Seat::getRoomId, room.getId())
+                    .eq(Seat::getStatus, "AVAILABLE");
+            if (positionFilter != null) seatQuery.eq(Seat::getPosition, positionFilter);
+            if (socketFilter != null) seatQuery.eq(Seat::getSocketType, socketFilter);
+
+            List<Seat> seats = seatMapper.selectList(seatQuery);
             if (!seats.isEmpty()) {
                 hasAvailable = true;
                 sb.append(String.format("📍 %s：\n", room.getName()));
@@ -204,7 +221,7 @@ public class AssistantService {
                     bySocket.computeIfAbsent(s.getSocketType(), k -> new ArrayList<>()).add(s);
                 }
                 bySocket.forEach((type, list) -> {
-                    String typeLabel = "FIXED".equals(type) ? "⚡固定插座" : "TRACK".equals(type) ? "🔌移动导轨" : "普通";
+                    String typeLabel = "FIXED".equals(type) ? "⚡固定插座" : "MOVABLE".equals(type) || "TRACK".equals(type) ? "🔌移动导轨" : "普通";
                     sb.append(String.format("  %s: %s\n", typeLabel,
                             list.stream().map(Seat::getSeatNumber).limit(10).reduce((a, b) -> a + ", " + b).orElse("")));
                     if (list.size() > 10) sb.append(" 等").append(list.size()).append("个");
@@ -213,7 +230,12 @@ public class AssistantService {
             }
         }
 
-        if (!hasAvailable) return "今天没有可用座位 😢";
+        if (!hasAvailable) {
+            if (positionFilter != null || socketFilter != null) {
+                return "没有找到符合条件" + (positionFilter != null ? "(" + (positionFilter.equals("WINDOW") ? "靠窗" : "靠走廊") + ")" : "") + "的可用座位 😢\n\n试试说\"有空座吗？\"查看所有可用座位";
+            }
+            return "今天没有可用座位 😢";
+        }
         sb.append("\n想要预约，可以说\"预约 [自习室名] [座位号] [日期] [时段]\"");
         return sb.toString();
     }

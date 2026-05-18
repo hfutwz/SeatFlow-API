@@ -84,6 +84,7 @@ public class RoomService {
         List<SeatResponse> seatResponses = seats.stream().map(s -> SeatResponse.builder()
                 .id(s.getId())
                 .roomId(s.getRoomId())
+                .roomName(room.getName())
                 .seatNumber(s.getSeatNumber())
                 .rowNum(s.getRowNum())
                 .colNum(s.getColNum())

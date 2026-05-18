@@ -91,12 +91,17 @@ public class SeatSearchService {
                 .map(Reservation::getSeatId)
                 .collect(Collectors.toList());
 
-        // 4. Build response
+        // 4. Build room id -> name map
+        java.util.Map<Long, String> roomNameMap = rooms.stream()
+                .collect(java.util.stream.Collectors.toMap(Room::getId, Room::getName));
+
+        // 5. Build response
         return seats.stream()
                 .filter(seat -> !reservedSeatIds.contains(seat.getId()))
                 .map(seat -> SeatResponse.builder()
                         .id(seat.getId())
                         .roomId(seat.getRoomId())
+                        .roomName(roomNameMap.getOrDefault(seat.getRoomId(), ""))
                         .seatNumber(seat.getSeatNumber())
                         .rowNum(seat.getRowNum())
                         .colNum(seat.getColNum())

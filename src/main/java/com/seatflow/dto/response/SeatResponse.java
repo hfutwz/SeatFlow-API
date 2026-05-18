@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class SeatResponse {
     private Long id;
     private Long roomId;
+    private String roomName;
     private String seatNumber;
     private Integer rowNum;
     private Integer colNum;
